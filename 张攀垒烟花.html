@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+<style>
+	html,body {
+				overflow: hidden; 
+			}
+			
+			body {
+				background: #000;
+			}
+			
+		 .fire {
+				width: 3px;
+				height: 40px;
+				background: white;
+				position: absolute;
+			}
+			
+		.spark {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				border-radius:10px;
+
+			}
+
+		.s1{
+				width:100px;
+				height:100px;
+				border-radius:50px;
+                  padding-top:30px;
+                  padding-left:30px;
+                  font-size:30px;
+                  color:white;
+                  position: absolute;
+			}
+			
+		</style>
+</head>
+<body>
+
+	<input type="button" value="点击屏幕">
+	
+</body>
+</html>
+<script>
+
+
+function startMove(obj,json,fn){  //  {"width":300,"height":300}
+	clearInterval(obj.timer);
+	obj.timer = setInterval(function(){
+		var flag = true;// 当开关变量的值为 true时，运动结束，可以停止定时器了		
+		for(var attr in json){		
+			var current = 0;
+			if(attr == "opacity"){
+				//操作透明度
+				current = parseFloat( getStyle( obj,attr ) ) * 100;
+			}else if( attr == "zIndex" ){
+				current = parseInt( getStyle(obj,attr) );//操作空间定位
+			}else{
+				//操作的是带有像素值的样式
+				current = parseInt( getStyle(obj,attr) );//获取当前操作对象的实际值
+			}
+			var speed = (json[attr] - current) / 10;
+			speed = speed>0 ? Math.ceil(speed) : Math.floor(speed);
+			if( json[attr] != current ){
+				//如果目标值 和 当前操作的样式值不相等，就不能停止定时器 
+				flag = false;				
+			}
+			//上面的条件不满足  继续执行运动
+			if(attr == "opacity"){
+				//操作透明度
+				obj.style.opacity = (current + speed) / 100;
+			}else if(attr == "zIndex"){
+				
+				obj.style.zIndex = json[attr] ;
+				
+			}else{
+				//操作的是带有像素值的样式
+				obj.style[attr] = current + speed + "px";
+			}		
+		}		
+		//如果flag为true   就停止定时器		
+		if(flag){
+			clearInterval(obj.timer);
+			//一个动作完成后,进入下一个动作(也就是要调用下一个函数)
+			if(fn){ //判断如果有函数传递过来，就调用
+				fn();
+			}
+		}
+		
+	},30)
+}
+function getStyle(obj,attr){
+	return window.getComputedStyle ? window.getComputedStyle(obj,false)[attr] : obj.currentStyle[attr];
+}
+
+	function create(ele){
+	return document.createElement(ele);
+}
+
+	function rand(min,max){
+	return Math.round( Math.random()*(max-min) + min );
+}
+
+//定义一个函数 获取随机的颜色值
+function getColor(){
+	return "rgb("+rand(0,255)+","+rand(0,255)+","+rand(0,255)+")";
+}
+
+//六位十六进制颜色值
+function randColor(){
+	var str = "0123456789abcdef";
+	// 从这个字符串中随机取出6位 
+	var color = "#";
+	for( var i = 1 ; i <= 6 ; i++ ){
+		color += str.charAt( rand(0,15) );
+	}
+	return color;
+}
+
+var arr=["你","太厉害","帅","完美"];
+       window.onload=function(){
+
+       document.onclick=function(e){
+
+              var e = e || event;
+
+           new Fire( { x : e.pageX , y :e.pageY } ).init().move()
+
+       }
+
+  }
+
+
+  function Fire (type){
+
+    this.type=type
+  	this.div=create("div")
+    document.body.appendChild(this.div)
+  	this.init=function(){
+     this.div.className = "fire";
+               this.div.style.backgroundColor=getColor();
+     this.div.style.left=this.type.x+"px";
+     this.div.style.top=window.innerHeight-100+"px";
+
+       return this
+  	}
+
+  	this.move = function(){
+			startMove( this.div , {top : this.type.y} ,function(){
+				this.div.remove();
+		       this.explode()
+			}.bind(this))
+		}
+
+   
+   this.explode=function(){
+
+            
+       for(i=0;i<rand(10,20);i++){
+
+  	new Spark(this.type).init().move();//必须传参数,记录坐标
+			
+  }
+				
+			
+		}
+
+  }
+
+
+      function Spark(type){
+
+		this.type = type;
+		this.init = function(){
+			this.body = create("p");
+
+
+			this.body.className = "spark";
+			document.body.appendChild( this.body );
+			this.body.style.backgroundColor = getColor();
+
+			this.body.style.left = this.type.x + "px";
+
+			this.body.style.top = this.type.y + "px";
+
+			return this;
+		}
+           
+
+         this.move=function(){
+
+             startMove( this.body , {top :rand(this.type.y-100,this.type.y+100),left:rand(this.type.x+100,this.type.x-100)} ,function(){
+
+				  this.body.remove();
+
+				  new S2(this.type).init().move()
+	
+		   
+			}.bind(this))
+
+         }
+
+ function S2(type){
+
+		this.type = type;
+		this.init = function(){
+			this.body = create("p");
+
+
+			this.body.className = "s1";
+			this.body.innerHTML=arr[rand(0,3)]
+
+			document.body.appendChild( this.body );
+			this.body.style.backgroundColor = getColor();
+
+			this.body.style.left = this.type.x + "px";
+
+			this.body.style.top = this.type.y + "px";
+
+			return this;
+		}
+           
+
+         this.move=function(){
+
+             startMove( this.body , {left:rand(this.type.x+400,this.type.x-400)} ,function(){
+
+				  this.body.remove();
+
+			}.bind(this))
+
+         }
+
+}
+
+          
+}
+
+     
+   </script>
